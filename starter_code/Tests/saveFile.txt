@@ -1,0 +1,9 @@
+A
+0
+B-3, E-1, R-1, O-1, T-1, P-3, A-1
+B
+0
+D-2, G-2, G-2, E-1, I-1, F-4, E-1
+The board was empty, players did not make a move.
+X-8, N-1, T-1, N-1, A-1, E-1, O-1, L-1, O-1, Z-10, G-2, T-1, E-1, J-8, I-1, E-1, N-1, I-1, O-1, I-1, T-1, O-1, Y-4, S-1, R-1, C-3, K-5, M-3, V-4, U-1, H-4, T-1, I-1, A-1, L-1, D-2, I-1, L-1, E-1, Q-10, H-4, A-1, V-4, O-1, A-1, E-1, E-1, P-3, O-1, R-1, A-1, D-2, R-1, W-4, M-3, U-1, U-1, S-1, W-4, Y-4, S-1, N-1, O-1, R-1, C-3, I-1, A-1, B-3, E-1, U-1, N-1, S-1, L-1, F-4, E-1, D-2, I-1, I-1, E-1, T-1, A-1, R-1, A-1, N-1
+A
