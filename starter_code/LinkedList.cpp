@@ -175,14 +175,23 @@ void LinkedList::removeFront() {
 }
 
 // Print out all the cards that the player has on their hand
-void LinkedList::print_hand() {
+void LinkedList::print_hand(bool enhance_status) {
    Node* temp = head;
    std::cout << "Your hand is" << std::endl;
 
    while (temp != nullptr) {
-      std::cout << temp->tile->getLetter() << "-" << temp->tile->getValue();
+      if (!enhance_status) {
+         std::cout << temp->tile->getLetter() << "-" << temp->tile->getValue();
+      } else {
+         std::cout << "\e[33m" << temp->tile->getLetter() << "-" << temp->tile->getValue() << "\033[0m";
+      }
+
       if (temp->next != nullptr) {
-         std::cout << ", ";
+         if (!enhance_status) {
+            std::cout << ", ";
+         } else {
+            std::cout << "\e[33m,\033[0m ";
+         }
       } else {
          std::cout << std::endl;
       }

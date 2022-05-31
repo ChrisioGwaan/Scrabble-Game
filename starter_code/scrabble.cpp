@@ -11,13 +11,14 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define EXIT_SUCCESS    0
-#define LETTER_A        65 // A in ASCII is 65(dec)
-#define LETTER_O        79 // O in ASCII is 79(dec)
-#define LETTER_Z        90 // Z in ASCII is 90(dec)
-#define X_VAL_FIRST     0
-#define X_VAL_LAST      14
-#define SAVEGAME_LINES  9
+#define EXIT_SUCCESS             0
+#define LETTER_A                 65 // A in ASCII is 65(dec)
+#define LETTER_O                 79 // O in ASCII is 79(dec)
+#define LETTER_Z                 90 // Z in ASCII is 90(dec)
+#define X_VAL_FIRST              0
+#define X_VAL_LAST               14
+#define SAVEGAME_LINES           9
+#define SAVEGAME_LINES_MYFORMAT  10
 
 #define NEW_GAME        "1"
 #define LOAD_GAME       "2"
@@ -39,17 +40,16 @@
 #define MEMBER_2_EMAIL  "s3827212@student.rmit.edu.au"
 
 std::string menu(bool enhance_status);
-void new_game();
-void save_game(std::string file_name, std::vector<std::vector<Tile*>> board, LinkedList* tile_pack,Player* currentTurnPlayer, Player* player1, Player* player2);
-void load_game();
-// void enhance_game();    // TODO
-bool enhancement_status();    // TODO
+void new_game(bool enhance_status);
+void save_game(std::string file_name, std::vector<std::vector<Tile*>> board, LinkedList* tile_pack,Player* currentTurnPlayer, Player* player1, Player* player2, bool enhance_status);
+void load_game(bool enhance_status);
+bool enhancement_status();
 void print_credits();
 void quit_game();
 bool isOnlyUpperLetter(const std::string& user_name);
-void start_gameplay(Player* player_1, Player* player_2, LinkedList* tile_pack, std::vector<std::vector<Tile*>> board, std::string currentPlayerName);
-void print_board(std::vector<std::vector<Tile*>> board);
-std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, LinkedList* tile_pack, std::vector<std::vector<Tile*>> board, Player* currentTurnPlayer);
+void start_gameplay(Player* player_1, Player* player_2, LinkedList* tile_pack, std::vector<std::vector<Tile*>> board, std::string currentPlayerName, bool enhance_status);
+void print_board(std::vector<std::vector<Tile*>> board, bool enhance_status);
+std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, LinkedList* tile_pack, std::vector<std::vector<Tile*>> board, Player* currentTurnPlayer, bool enhance_status);
 int calculate_pos_score(bool isYmove, std::vector<std::vector<Tile*>> board, int position_x, int position_y);
 int calculate_neg_score(bool isYmove, std::vector<std::vector<Tile*>> board, int position_x, int position_y);
 bool isHandFormatCorrect(std::string texts);
@@ -71,9 +71,9 @@ int main(void) {
    while (user_num == PRINT_CREDITS || user_num == ENHANCE_GAME) {
       user_num = menu(enhance_status);
       if (user_num == NEW_GAME) {
-         new_game();  
+         new_game(enhance_status);  
       } else if (user_num == LOAD_GAME) { 
-         load_game();
+         load_game(enhance_status);
       } else if (user_num == PRINT_CREDITS) { 
          print_credits();
       } else if (user_num == QUIT_GAME) { 
@@ -104,12 +104,14 @@ std::string menu(bool enhance_status) {
    std::cout << "Enhancement Status: ";
    if (!enhance_status) {
       std::cout << "\e[31mOFF\033[0m" << std::endl;
+      std::cout << std::endl;
+      std::cout << "> ";
    } else {
       std::cout << "\e[32mON\033[0m" << std::endl;
+      std::cout << std::endl;
+      std::cout << "\e[33m>\033[0m ";
    }
-   std::cout << std::endl;
 
-   std::cout << "> ";
    std::cin >> user_num;
    std::cout << std::endl;
 
@@ -136,12 +138,11 @@ std::string menu(bool enhance_status) {
          } else if (user_num.compare("exit") == 0 || user_num.compare("quit") == 0) {
             // End the program
             quit_game();
-            exit(EXIT_SUCCESS);
          } else {
             std::cout << "\e[34mThe input is not number 1, 2, 3, 4 or 5. Try again!\033[0m" << std::endl;
             std::cout << "Want help? Just type \e[33m\"help\"\033[0m in the command line." << std::endl;
          }
-         std::cout << "> ";
+         std::cout << "\e[33m>\033[0m ";
          std::cin >> user_num;
          std::cout << std::endl;
       }
@@ -156,317 +157,397 @@ std::string menu(bool enhance_status) {
 }
 
 // 2.2.1 New Game
-void new_game() {
+void new_game(bool enhance_status) {
    std::string player_1;
    std::string player_2;
    
    std::cout << "Starting a New Game\n" << std::endl;
-   std::cout << "Enter a name for player 1 (uppercase characters only)" << std::endl;
-   std::cout << "> ";
+   if (!enhance_status) {
+      // M2 - Original Gameplay
+      std::cout << "Enter a name for player 1 (uppercase characters only)" << std::endl;
+      std::cout << "> ";
+   } else {
+      // M3 - Enhanced Gameplay
+      std::cout << "Enter a name for \e[36mplayer 1\033[0m (uppercase characters only)" << std::endl;
+      std::cout << "\e[33m>\033[0m ";
+   }
    std::cin >> player_1;
    std::cout << std::endl;
 
-   if (!std::cin.eof()) {
-      while (!isOnlyUpperLetter(player_1)) {
+   while (!std::cin.eof() && !isOnlyUpperLetter(player_1)) {
+      if (!enhance_status) {
+         // M2 - Original Gameplay
          std::cout << "Enter a name again for player 1 (uppercase characters only)" << std::endl;
          std::cout << "> ";
-         std::cin >> player_1;
-         std::cout << std::endl;
+      } else {
+         // M3 - Enhanced Gameplay
+         if (player_1.compare("help") == 0) {
+            print_help();
+            std::cout << "\e[33m>\033[0m ";
+         } else if (player_1.compare("exit") == 0 || player_1.compare("quit") == 0) {
+            quit_game();
+         } else {
+            std::cout << "Enter a name again for \e[36mplayer 1\033[0m (uppercase characters only)" << std::endl;
+            std::cout << "\e[33m>\033[0m ";
+         }
       }
+      std::cin >> player_1;
+      std::cout << std::endl;
    }
 
-   std::cout << "Enter a name for player 2 (uppercase characters only)" << std::endl;
-   std::cout << "> ";
+   if (std::cin.eof()) {
+      quit_game();
+   }
+
+   if (!enhance_status) {
+      // M2 - Original Gameplay
+      std::cout << "Enter a name for player 2 (uppercase characters only)" << std::endl;
+      std::cout << "> ";
+   } else {
+      // M3 - Enhanced Gameplay
+      std::cout << "Enter a name for \e[35mplayer 2\033[0m (uppercase characters only)" << std::endl;
+      std::cout << "\e[33m>\033[0m ";
+   }
    std::cin >> player_2;
    std::cout << std::endl;
 
-   if (!std::cin.eof()) {
-      while (std::cin.eof() || !isOnlyUpperLetter(player_2)) {
+   while (!std::cin.eof() && !isOnlyUpperLetter(player_2)) {
+      if (!enhance_status) {
+         // M2 - Original Gameplay
          std::cout << "Enter a name again for player 2 (uppercase characters only)" << std::endl;
          std::cout << "> ";
-         std::cin >> player_2;
-         std::cout << std::endl;
-      }
-
-      Player* player1 = new Player(player_1);
-      Player* player2 = new Player(player_2);
-      
-      // Create a list
-      LinkedList* tile_pack = new LinkedList();
-
-      // Create a board
-      // 2D vector for the type of Tile pointer
-      std::vector<std::vector<Tile*>> board;
-
-      // Read ScrabbleTiles.txt file
-      std::ifstream scrabbleTiles("ScrabbleTiles.txt");
-
-      // Create a temporary string for getting texts from the file
-      std::string tempTexts;
-
-      // Create a temporary tile pointer
-      Tile* tempTile;
-
-      // Create a temporary letter and value for storing texts to the tile from the file
-      Letter tempLetter;
-      Value tempValue;
-
-      // Creat a temporary vector
-      std::vector<Tile*> tempTiles;
-      
-      while (!scrabbleTiles.eof()) {
-         std::getline(scrabbleTiles, tempTexts);
-         
-         if (!tempTexts.empty()) {
-            tempLetter = tempTexts.front();
-            tempValue = std::stoi(tempTexts.substr(2, tempTexts.size()-1));
-            tempTile = new Tile(tempLetter, tempValue);
-            tempTiles.push_back(tempTile);
+      } else {
+         // M3 - Enhanced Gameplay
+         if (player_2.compare("help") == 0) {
+            print_help();
+            std::cout << "\e[33m>\033[0m ";
+         } else if (player_2.compare("exit") == 0 || player_2.compare("quit") == 0) {
+            quit_game();
+         } else {
+            std::cout << "Enter a name again for \e[35mplayer 2\033[0m (uppercase characters only)" << std::endl;
+            std::cout << "\e[33m>\033[0m ";
          }
       }
+      std::cin >> player_2;
+      std::cout << std::endl;
+   }
 
-      // Shuff the tile card
-      while (!tempTiles.empty()) {
-         srand(time(nullptr));
-         int randIndex = rand() % tempTiles.size();
-         tile_pack->append(tempTiles[randIndex]);
-         tempTiles.erase(tempTiles.begin() + randIndex);
-      }
+   if (std::cin.eof()) {
+      quit_game();
+   }
 
-      // Give the random 7 tiles to the players
-      for (int i = 0; i < HAND_AMOUNT; ++i) {
-         player1->player_hand->append(tile_pack->moveTile(0));
-         player2->player_hand->append(tile_pack->moveTile(0));
-      }
+   Player* player1 = new Player(player_1);
+   Player* player2 = new Player(player_2);
+   
+   // Create a list
+   LinkedList* tile_pack = new LinkedList();
+
+   // Create a board
+   // 2D vector for the type of Tile pointer
+   std::vector<std::vector<Tile*>> board;
+
+   // Read ScrabbleTiles.txt file
+   std::ifstream scrabbleTiles("ScrabbleTiles.txt");
+
+   // Create a temporary string for getting texts from the file
+   std::string tempTexts;
+
+   // Create a temporary tile pointer
+   Tile* tempTile;
+
+   // Create a temporary letter and value for storing texts to the tile from the file
+   Letter tempLetter;
+   Value tempValue;
+
+   // Creat a temporary vector
+   std::vector<Tile*> tempTiles;
+   
+   while (!scrabbleTiles.eof()) {
+      std::getline(scrabbleTiles, tempTexts);
       
-      // Game start!
+      if (!tempTexts.empty()) {
+         tempLetter = tempTexts.front();
+         tempValue = std::stoi(tempTexts.substr(2, tempTexts.size()-1));
+         tempTile = new Tile(tempLetter, tempValue);
+         tempTiles.push_back(tempTile);
+      }
+   }
+
+   // Shuff the tile card
+   while (!tempTiles.empty()) {
+      srand(time(nullptr));
+      int randIndex = rand() % tempTiles.size();
+      tile_pack->append(tempTiles[randIndex]);
+      tempTiles.erase(tempTiles.begin() + randIndex);
+   }
+
+   // Give the random 7 tiles to the players
+   for (int i = 0; i < HAND_AMOUNT; ++i) {
+      player1->player_hand->append(tile_pack->moveTile(0));
+      player2->player_hand->append(tile_pack->moveTile(0));
+   }
+   
+   // Game start!
+   if (!enhance_status) {
+      // M2 - Original Gameplay
       std::cout << "Let's Play!" << std::endl;
       std::cout << std::endl;
-      
-      // <Normal gameplay continues from here>
-      start_gameplay(player1, player2, tile_pack, board, "");
-
-      delete player1;
-      delete player2;
+   } else {
+      // M3 - Enhanced Gameplay
+      std::cout << "\e[41mLet's Play!\033[0m" << std::endl;
+      std::cout << std::endl;
    }
+
+   // <Normal gameplay continues from here>
+   start_gameplay(player1, player2, tile_pack, board, "", enhance_status);
+   delete player1;
+   delete player2;
 }
 
 // 2.2.2 Load Game
-void load_game() {
+void load_game(bool enhance_status) {
    std::ifstream load_game_file;
    std::string load_game_file_name;
 
    std::cout << "Enter the filename from which load a game" << std::endl;
-   std::cout << "> ";
+   if (!enhance_status) {
+      std::cout << "> ";
+   } else {
+      std::cout << "\e[33m>\033[0m ";
+   }
    std::cin >> load_game_file_name;
    std::cout << std::endl;
 
-   // When user uses Ctrl + D as input
-   if (!std::cin.eof()) {
-      // Create a boolean value to identify whether the file contents have correct formats
-      bool isCorrectFormat = false;
+   // Create a boolean value to identify whether the file contents have correct formats
+   bool isCorrectFormat = false;
 
-      // Create a vector to store all the contents from the file
-      std::vector<std::string> file_contents;
+   // Create a vector to store all the contents from the file
+   std::vector<std::string> file_contents;
 
-      // Create a vector to store 'T' or 'F' for checking the format of the load game file
-      std::vector<char> t_f_vector;
+   // Create a vector to store 'T' or 'F' for checking the format of the load game file
+   std::vector<char> t_f_vector;
 
-      // For reading every lines from the file
-      std::string line;
+   // For reading every lines from the file
+   std::string line;
 
-      // Open the file with the given file name
-      load_game_file.open(load_game_file_name);
+   // Open the file with the given file name
+   load_game_file.open(load_game_file_name);
 
-      // If the given file name does not exist, will enter this loop
-      while (!load_game_file) {
+   // If the given file name does not exist, will enter this loop
+   while (!std::cin.eof() && !load_game_file) {
+      if (!enhance_status) {
          std::cout << "The file <" << load_game_file_name << "> does not exist." << std::endl;
          std::cout << std::endl;
          std::cout << "Enter the filename from which load a game" << std::endl;
          std::cout << "> ";
-         std::cin >> load_game_file_name;
-         std::cout << std::endl;
-
-         load_game_file.open(load_game_file_name);
-      }
-
-      // Read file contents and store to the vector that we have created
-      while (std::getline(load_game_file, line)) {
-         file_contents.push_back(line);
-      }
-
-      // Close the file
-      load_game_file.close();
-
-      // If the lines if the load game file is not equal to 9, format is not correct
-      if ((int)file_contents.size() == SAVEGAME_LINES) {
-         // Access the vector contents one by one
-         for (int i = 0; i < (int)file_contents.size(); ++i) {
-            if (i == 0 && isOnlyUpperLetter(file_contents.at(i))) { // Line 1 checking
-               t_f_vector.push_back('T');
-            } else if (i == 1 && std::stoi(file_contents.at(i)) >= 0) { // Line 2 checking
-               t_f_vector.push_back('T');
-            } else if (i == 2 && isHandFormatCorrect(file_contents.at(i))) { // Line 3 checking
-               t_f_vector.push_back('T');
-            } else if (i == 3 && isOnlyUpperLetter(file_contents.at(i))) { // Line 4 checking
-               t_f_vector.push_back('T');
-            } else if (i == 4 && std::stoi(file_contents.at(i)) >= 0) { // Line 5 checking
-               t_f_vector.push_back('T');
-            } else if (i == 5 && isHandFormatCorrect(file_contents.at(i))) { // Line 6 checking
-               t_f_vector.push_back('T');
-            } else if (i == 6 && (isTileFormatCorrect(file_contents.at(i)) || file_contents.at(i) == NOMOVE_MSG)) { // Line 7 checking
-               t_f_vector.push_back('T');
-            } else if (i == 7 && isHandFormatCorrect(file_contents.at(i))) { // Line 8 checking
-               t_f_vector.push_back('T');
-            } else if (i == 8 && isOnlyUpperLetter(file_contents.at(i))) { // Line 9 checking
-               t_f_vector.push_back('T');
-            }
-         }
-
-         // To check whether the t_f_vector has 9 'T' values
-         // If the size is equal to 9, it means that the formats are all correct
-         if ((int)t_f_vector.size() == SAVEGAME_LINES) {
-            isCorrectFormat = true;
-         } 
-      }
-
-      // When the format of the load game file is not correct, print the fail message and quit the program
-      if (!isCorrectFormat) {
-         std::cout << "Scrabble game failed to be loaded" << std::endl;
-         std::cout << std::endl;
       } else {
-         std::cout << "Scrabble game successfully loaded" << std::endl;
+         std::cout << "\e[41mThe file <" << load_game_file_name << "> does not exist.\033[0m" << std::endl;
          std::cout << std::endl;
-
-         std::vector<std::string> str_vector;
-
-         // Create a board
-         std::vector<std::vector<Tile*>> board;
-
-         Tile* tempTile;
-         
-
-         /*
-         Set player name
-         */
-         Player* player1 = new Player(file_contents.at(0));
-         Player* player2 = new Player(file_contents.at(3));
-
-         /*
-         Store players' hand
-         */
-         std::string texts;
-         texts = file_contents.at(2);
-         while ((int)texts.find(",") != -1) {
-            str_vector.push_back(texts.substr(0, texts.find(",")));
-            texts = texts.substr(texts.find(",") + 2, texts.length());
-         }
-         str_vector.push_back(texts);
-
-         for (int i = 0; i < (int)str_vector.size(); ++i) {
-            tempTile = new Tile(str_vector[i][0], (int)str_vector[i][2] - '0');
-            player1->player_hand->append(tempTile);
-         }
-         str_vector.clear();
-
-         texts = file_contents.at(5);
-         while ((int)texts.find(",") != -1) {
-            str_vector.push_back(texts.substr(0, texts.find(",")));
-            texts = texts.substr(texts.find(",") + 2, texts.length());
-         }
-         str_vector.push_back(texts);
-
-         for (int i = 0; i < (int)str_vector.size(); ++i) {
-            tempTile = new Tile(str_vector[i][0], (int)str_vector[i][2] - '0');
-            player2->player_hand->append(tempTile);
-         }
-         str_vector.clear();
-
-         // Set the players' scores
-         player1->setScores(std::stoi(file_contents.at(1)));
-         player2->setScores(std::stoi(file_contents.at(4)));
-
-         // Store the board contents
-         if (file_contents.at(6) != NOMOVE_MSG) {
-
-            // Resize the board to 15*15
-            board.resize(BOARD_SIZE);
-            for (int i = 0; i < BOARD_SIZE; ++i) {
-               board[i].resize(BOARD_SIZE);
-            }
-
-            texts = file_contents.at(6);
-
-            while ((int)texts.find(" ") != -1) {
-               str_vector.push_back(texts.substr(0, texts.find(" ")));
-               texts = texts.substr(texts.find(" ") + 1, texts.length());
-            }
-            str_vector.push_back(texts);
-
-            // To store letter
-            std::vector<char> tile_letter;
-
-            // To store Y value
-            std::vector<int> y_val;
-
-            // To store X value
-            std::vector<int> x_val;
-
-            for (int i = 0; i < (int)str_vector.size(); ++i) {
-               tile_letter.push_back(str_vector[i][0]);
-               y_val.push_back((int)str_vector[i][2] - LETTER_A);
-               x_val.push_back((int)str_vector[i][3] - '0');
-            }
-            
-            LinkedList* tempList = new LinkedList();
-            Tile* tile_board;
-
-            for (int i = 0; i < (int)y_val.size(); ++i) {
-               tile_board = new Tile(tile_letter[i], 0);
-               tempList->append(tile_board);
-            }
-            
-            int count = 0;
-            while (count != (int)y_val.size()) {
-               for (int i = 0; i < BOARD_SIZE; ++i) {
-                  for (int j = 0; j < BOARD_SIZE; ++j) {
-                     if (j == x_val[count] && i == y_val[count]) {
-                        Tile* tempTile2 = tempList->getTile(tile_letter[count]);
-                        board[i][j] = tempTile2;
-                     }
-                  } 
-               }
-               ++count;
-            }
-            str_vector.clear();
-         }
-
-         /* 
-         Store hand to tile bag 
-         */
-
-         // Create a linked list to store hand into tile bag
-         LinkedList* tile_pack = new LinkedList();
-
-         texts = file_contents.at(7);
-         while ((int)texts.find(",") != -1) {
-               str_vector.push_back(texts.substr(0, texts.find(",")));
-               texts = texts.substr(texts.find(",") + 2, texts.length());
-         }
-         str_vector.push_back(texts);
-         Tile* temp_Tile;
-
-         for (int i = 0; i < (int)str_vector.size(); ++i) {
-            temp_Tile = new Tile(str_vector[i][0], (int)str_vector[i][2] - '0');
-            tile_pack->append(temp_Tile);
-         }
-         str_vector.clear();
-
-         /* 
-         Start the gameplay
-         */
-         start_gameplay(player1, player2, tile_pack, board, file_contents.at(8));
+         std::cout << "Enter the filename from which load a game" << std::endl;
+         std::cout << "\e[33m>\033[0m ";
       }
+      
+      std::cin >> load_game_file_name;
+      std::cout << std::endl;
+
+      load_game_file.open(load_game_file_name);
+   }
+
+   if (std::cin.eof()) {
+      quit_game();
+   }
+
+   // Read file contents and store to the vector that we have created
+   while (std::getline(load_game_file, line)) {
+      file_contents.push_back(line);
+   }
+
+   // Close the file
+   load_game_file.close();
+
+   // If the lines if the load game file is not equal to 9, format is not correct
+   if ((int)file_contents.size() == SAVEGAME_LINES || (int)file_contents.size() == SAVEGAME_LINES_MYFORMAT) {
+      int num = 0;
+      if ((int)file_contents.size() == SAVEGAME_LINES_MYFORMAT) {
+         num = 1;
+      }
+      // Access the vector contents one by one
+      for (int i = num; i < (int)file_contents.size(); ++i) {
+         if (i == num && isOnlyUpperLetter(file_contents.at(i))) { // Line 1 checking
+            t_f_vector.push_back('T');
+         } else if (i == num+1 && std::stoi(file_contents.at(i)) >= 0) { // Line 2 checking
+            t_f_vector.push_back('T');
+         } else if (i == num+2 && isHandFormatCorrect(file_contents.at(i))) { // Line 3 checking
+            t_f_vector.push_back('T');
+         } else if (i == num+3 && isOnlyUpperLetter(file_contents.at(i))) { // Line 4 checking
+            t_f_vector.push_back('T');
+         } else if (i == num+4 && std::stoi(file_contents.at(i)) >= 0) { // Line 5 checking
+            t_f_vector.push_back('T');
+         } else if (i == num+5 && isHandFormatCorrect(file_contents.at(i))) { // Line 6 checking
+            t_f_vector.push_back('T');
+         } else if (i == num+6 && (isTileFormatCorrect(file_contents.at(i)) || file_contents.at(i) == NOMOVE_MSG)) { // Line 7 checking
+            t_f_vector.push_back('T');
+         } else if (i == num+7 && isHandFormatCorrect(file_contents.at(i))) { // Line 8 checking
+            t_f_vector.push_back('T');
+         } else if (i == num+8 && isOnlyUpperLetter(file_contents.at(i))) { // Line 9 checking
+            t_f_vector.push_back('T');
+         }
+      }
+
+      // To check whether the t_f_vector has 9 'T' values
+      // If the size is equal to 9, it means that the formats are all correct
+      if ((int)t_f_vector.size() == SAVEGAME_LINES) {
+         isCorrectFormat = true;
+      } 
+   }
+
+   // When the format of the load game file is not correct, print the fail message and quit the program
+   if (!isCorrectFormat) {
+      if (!enhance_status) {
+         std::cout << "Scrabble game failed to be loaded" << std::endl;
+      } else {
+         std::cout << "\e[41mScrabble game failed to be loaded\033[0m" << std::endl;
+      }
+      std::cout << std::endl;
+   } else {
+      if (!enhance_status) {
+         std::cout << "Scrabble game successfully loaded" << std::endl;
+      } else {
+         std::cout << "\e[42mScrabble game successfully loaded\033[0m" << std::endl;
+      }
+      std::cout << std::endl;
+
+      std::vector<std::string> str_vector;
+
+      // Create a board
+      std::vector<std::vector<Tile*>> board;
+
+      Tile* tempTile;
+      int num = 0;
+      if ((int)file_contents.size() == SAVEGAME_LINES_MYFORMAT) {
+         num = 1;
+      }
+      
+      /*
+      Set player name
+      */
+      Player* player1 = new Player(file_contents.at(num+0));
+      Player* player2 = new Player(file_contents.at(num+3));
+
+      /*
+      Store players' hand
+      */
+      std::string texts;
+      texts = file_contents.at(num+2);
+      while ((int)texts.find(",") != -1) {
+         str_vector.push_back(texts.substr(0, texts.find(",")));
+         texts = texts.substr(texts.find(",") + 2, texts.length());
+      }
+      str_vector.push_back(texts);
+
+      for (int i = 0; i < (int)str_vector.size(); ++i) {
+         tempTile = new Tile(str_vector[i][0], (int)str_vector[i][2] - '0');
+         player1->player_hand->append(tempTile);
+      }
+      str_vector.clear();
+
+      texts = file_contents.at(num+5);
+      while ((int)texts.find(",") != -1) {
+         str_vector.push_back(texts.substr(0, texts.find(",")));
+         texts = texts.substr(texts.find(",") + 2, texts.length());
+      }
+      str_vector.push_back(texts);
+
+      for (int i = 0; i < (int)str_vector.size(); ++i) {
+         tempTile = new Tile(str_vector[i][0], (int)str_vector[i][2] - '0');
+         player2->player_hand->append(tempTile);
+      }
+      str_vector.clear();
+
+      // Set the players' scores
+      player1->setScores(std::stoi(file_contents.at(num+1)));
+      player2->setScores(std::stoi(file_contents.at(num+4)));
+
+      // Store the board contents
+      if (file_contents.at(num+6) != NOMOVE_MSG) {
+
+         // Resize the board to 15*15
+         board.resize(BOARD_SIZE);
+         for (int i = 0; i < BOARD_SIZE; ++i) {
+            board[i].resize(BOARD_SIZE);
+         }
+
+         texts = file_contents.at(num+6);
+
+         while ((int)texts.find(" ") != -1) {
+            str_vector.push_back(texts.substr(0, texts.find(" ")));
+            texts = texts.substr(texts.find(" ") + 1, texts.length());
+         }
+         str_vector.push_back(texts);
+
+         // To store letter
+         std::vector<char> tile_letter;
+
+         // To store Y value
+         std::vector<int> y_val;
+
+         // To store X value
+         std::vector<int> x_val;
+
+         for (int i = 0; i < (int)str_vector.size(); ++i) {
+            tile_letter.push_back(str_vector[i][0]);
+            y_val.push_back((int)str_vector[i][2] - LETTER_A);
+            x_val.push_back((int)str_vector[i][3] - '0');
+         }
+         
+         LinkedList* tempList = new LinkedList();
+         Tile* tile_board;
+
+         for (int i = 0; i < (int)y_val.size(); ++i) {
+            tile_board = new Tile(tile_letter[i], 0);
+            tempList->append(tile_board);
+         }
+         
+         int count = 0;
+         while (count != (int)y_val.size()) {
+            for (int i = 0; i < BOARD_SIZE; ++i) {
+               for (int j = 0; j < BOARD_SIZE; ++j) {
+                  if (j == x_val[count] && i == y_val[count]) {
+                     Tile* tempTile2 = tempList->getTile(tile_letter[count]);
+                     board[i][j] = tempTile2;
+                  }
+               } 
+            }
+            ++count;
+         }
+         str_vector.clear();
+      }
+
+      /* 
+      Store hand to tile bag 
+      */
+
+      // Create a linked list to store hand into tile bag
+      LinkedList* tile_pack = new LinkedList();
+
+      texts = file_contents.at(7);
+      while ((int)texts.find(",") != -1) {
+            str_vector.push_back(texts.substr(0, texts.find(",")));
+            texts = texts.substr(texts.find(",") + 2, texts.length());
+      }
+      str_vector.push_back(texts);
+      Tile* temp_Tile;
+
+      for (int i = 0; i < (int)str_vector.size(); ++i) {
+         temp_Tile = new Tile(str_vector[i][0], (int)str_vector[i][2] - '0');
+         tile_pack->append(temp_Tile);
+      }
+      str_vector.clear();
+
+      /* 
+      Start the gameplay
+      */
+      start_gameplay(player1, player2, tile_pack, board, file_contents.at(8), enhance_status);
    }
 }
 
@@ -488,6 +569,7 @@ void print_credits() {
 // 2.2.4 Quit
 void quit_game() {
    std::cout << "Goodbye!" << std::endl;
+   exit(EXIT_SUCCESS);
 }
 
 // Check player's name ONLY contains captial letters
@@ -504,7 +586,7 @@ bool isOnlyUpperLetter(const std::string& user_name) {
 }
 
 // Gameplay function
-void start_gameplay(Player* player1, Player* player2, LinkedList* tile_pack, std::vector<std::vector<Tile*>> board, std::string currentPlayerName) {
+void start_gameplay(Player* player1, Player* player2, LinkedList* tile_pack, std::vector<std::vector<Tile*>> board, std::string currentPlayerName, bool enhance_status) {
    Player* currentTurnPlayer;
    Player* nextTurnPlayer;
    
@@ -525,22 +607,37 @@ void start_gameplay(Player* player1, Player* player2, LinkedList* tile_pack, std
    while (player1->player_hand->size() > 0 && player2->player_hand->size() > 0 && tile_pack->size() > 0 && currentTurnPlayer->countPass < 3) {
 
       // The current player's turn
-      std::cout << currentTurnPlayer->getName() << ", it's your turn" << std::endl;
-      std::cout << "Score for " << player1->getName() << ": " << player1->getScores() << std::endl;
-      std::cout << "Score for " << player2->getName() << ": " << player2->getScores() << std::endl;
-      print_board(board);
+      if (!enhance_status) {
+         std::cout << currentTurnPlayer->getName() << ", it's your turn" << std::endl;
+         std::cout << "Score for " << player1->getName() << ": " << player1->getScores() << std::endl;
+         std::cout << "Score for " << player2->getName() << ": " << player2->getScores() << std::endl;
+      } else {
+         if (currentTurnPlayer->getName().compare(player1->getName()) == 0) {
+            std::cout << "\e[36m" << currentTurnPlayer->getName() << "\033[0m, it's your turn" << std::endl;
+         } else {
+            std::cout << "\e[35m" << currentTurnPlayer->getName() << "\033[0m, it's your turn" << std::endl;
+         }
+         std::cout << "Score for \e[36m" << player1->getName() << "\033[0m: " << player1->getScores() << std::endl;
+         std::cout << "Score for \e[35m" << player2->getName() << "\033[0m: " << player2->getScores() << std::endl;
+      }
+      
+      print_board(board, enhance_status);
 
-      currentTurnPlayer->player_hand->print_hand();
+      currentTurnPlayer->player_hand->print_hand(enhance_status);
       std::cout << std::endl;
 
-      board = tile_move(player1, player2, tile_pack, board, currentTurnPlayer);
+      board = tile_move(player1, player2, tile_pack, board, currentTurnPlayer, enhance_status);
       
       // If the player places all the seven tiles in the hand
       // Print BINGO message and give 50 points
       if (currentTurnPlayer->player_hand->size() == 0) {
          currentTurnPlayer->sumUpScores(BINGO);
          std::cout << std::endl;
-         std::cout << "BINGO!!!" << std::endl;
+         if (!enhance_status) {
+            std::cout << "BINGO!!!" << std::endl;
+         } else {
+            std::cout << "\e[43mBINGO!!!\033[0m" << std::endl;
+         }
          std::cout << std::endl;
          std::cout << currentTurnPlayer->getName() << std::endl;
          std::cout << std::endl;
@@ -560,15 +657,28 @@ void start_gameplay(Player* player1, Player* player2, LinkedList* tile_pack, std
    }
 
    // Game over session
-   std::cout << "Game over" << std::endl;
-   std::cout << "Score for " << player1->getName() << ": " << player1->getScores() << std::endl;
-   std::cout << "Score for " << player2->getName() << ": " << player2->getScores() << std::endl;
-   
-   // Compare player's scores to print the winner out
-   if (player1->getScores() > player2->getScores()) {
-      std::cout << "Player " << player1->getName() << " won!" << std::endl;
+   if (!enhance_status) {
+      std::cout << "Game over" << std::endl;
+      std::cout << "Score for " << player1->getName() << ": " << player1->getScores() << std::endl;
+      std::cout << "Score for " << player2->getName() << ": " << player2->getScores() << std::endl;
+
+      // Compare player's scores to print the winner out
+      if (player1->getScores() > player2->getScores()) {
+         std::cout << "Player " << player1->getName() << " won!" << std::endl;
+      } else {
+         std::cout << "Player " << player2->getName() << " won!" << std::endl;
+      }
    } else {
-      std::cout << "Player " << player2->getName() << " won!" << std::endl;
+      std::cout << "\e[41mGame over\033[0m" << std::endl;
+      std::cout << "Score for \e[36m" << player1->getName() << "\033[0m: " << player1->getScores() << std::endl;
+      std::cout << "Score for \e[35m" << player2->getName() << "\033[0m: " << player2->getScores() << std::endl;
+
+      // Compare player's scores to print the winner out
+      if (player1->getScores() > player2->getScores()) {
+         std::cout << "Player \e[36m" << player1->getName() << "\033[0m won!" << std::endl;
+      } else {
+         std::cout << "Player \e[35m" << player2->getName() << "\033[0m won!" << std::endl;
+      }
    }
    std::cout << std::endl;
    // Quit the game
@@ -576,19 +686,36 @@ void start_gameplay(Player* player1, Player* player2, LinkedList* tile_pack, std
 }
 
 // Print the game board
-void print_board(std::vector<std::vector<Tile*>> board) {
-   std::cout << "    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14" << std::endl;
-   std::cout << "  -------------------------------------------------------------" << std::endl;
-
+void print_board(std::vector<std::vector<Tile*>> board, bool enhance_status) {
+   if (!enhance_status) {
+      std::cout << "    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14" << std::endl;
+      std::cout << "  -------------------------------------------------------------" << std::endl;
+   } else {
+      std::cout << "\e[104m    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  \033[0m" << std::endl;
+      std::cout << "\e[104m  -------------------------------------------------------------\033[0m" << std::endl;
+   }
+   
    for (int i = 0; i < BOARD_SIZE; ++i) {
-      std::cout << char(LETTER_A + i);
+      if (!enhance_status) {
+         std::cout << char(LETTER_A + i);
+      } else {
+         std::cout << "\e[104m" << char(LETTER_A + i) << "\033[0m";
+      }
       
       for (int j = 0; j < BOARD_SIZE; ++j) {
-         std::cout << " | ";
+         if (!enhance_status) {
+            std::cout << " | ";
+         } else {
+            std::cout << " \e[94m|\033[0m ";
+         }
 
          if (!board.empty()) {
             if (board[i][j] != 0) {
-               std::cout << board[i][j]->getLetter();
+               if (!enhance_status) {
+                  std::cout << board[i][j]->getLetter();
+               } else {
+                  std::cout << "\e[94m" << board[i][j]->getLetter() << "\033[0m";
+               }
             } else {
                std::cout << " ";
             }
@@ -596,13 +723,18 @@ void print_board(std::vector<std::vector<Tile*>> board) {
             std::cout << " ";
          }
       }
-      std::cout << " |";
+
+      if (!enhance_status) {
+         std::cout << " |";
+      } else {
+         std::cout << " \e[94m|\033[0m";
+      }
       std::cout << std::endl;
    }
    std::cout << std::endl;
 }
 
-std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, LinkedList* tile_pack, std::vector<std::vector<Tile*>> board, Player* currentTurnPlayer) {
+std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, LinkedList* tile_pack, std::vector<std::vector<Tile*>> board, Player* currentTurnPlayer, bool enhance_status) {
    // To check if the movement is vertical or horizontal
    // To check the input is valid
    // To check if the input needs to exit the loop
@@ -628,7 +760,11 @@ std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, Link
 
    std::string player_move;
 
-   std::cout << "> ";
+   if (!enhance_status) {
+      std::cout << "> ";
+   } else {
+      std::cout << "\e[33m>\033[0m ";
+   }
    // Get the whole line of the string from input
    std::getline(std::cin, player_move);
 
@@ -648,8 +784,22 @@ std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, Link
          if (player_move_input[0].compare("save") == 0) {
             isValidInput = true;
             // Save the current gameplay
-            save_game(player_move_input[1], board, tile_pack, currentTurnPlayer, player1, player2);
-         } 
+            save_game(player_move_input[1], board, tile_pack, currentTurnPlayer, player1, player2, enhance_status);
+         } else if (player_move_input[0].compare("pass") == 0) {
+            isValidInput = true;
+            game_exit = true;
+            // Count the times of pass
+            ++currentTurnPlayer->countPass;
+         }
+
+         if (enhance_status) {
+            if (player_move_input[0].compare("quit") == 0 || player_move_input[0].compare("exit") == 0) {
+               quit_game();
+            } else if (player_move_input[0].compare("help") == 0) {
+               isValidInput = true;
+               print_help();
+            }
+         }
          
          if (player_move_input.size() > 1 && player_move_input[0] != "save") {
             // 'place Done' command
@@ -667,11 +817,6 @@ std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, Link
                      currentTurnPlayer->player_hand->append(tile_pack->get(0));
                   }
                }
-            } else if (player_move_input[0].compare("pass") == 0) { // Pass command'
-               isValidInput = true;
-               game_exit = true;
-               // Count the times of pass
-               ++currentTurnPlayer->countPass;
             } else if (player_move_input.size() > 3) {
                if (player_move_input[0].compare("place") == 0 && player_move_input[2].compare("at") == 0) { // Place ... at ... command
                   Letter hand_letter = player_move_input[1][0]; // Get the character of the index 1 string
@@ -878,13 +1023,21 @@ std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, Link
 
          // If the input is not correct and EOF
          if (!isValidInput && !std::cin.eof()) {
-            std::cout << "Invalid Input" << std::endl;
+            if (!enhance_status) {
+               std::cout << "Invalid Input" << std::endl;
+            } else {
+               std::cout << "\e[33mInvalid Input\033[0m" << std::endl;
+            }
          }
          player_move_input.clear();
 
          // If input is 'place Done', will not run this code
          if (!game_exit) {
-            std::cout << "> ";
+            if (!enhance_status) {
+               std::cout << "> ";
+            } else {
+               std::cout << "\e[33m>\033[0m ";
+            }
             // Get the whole line of the string from input
             std::getline(std::cin, player_move);
          }
@@ -892,7 +1045,6 @@ std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, Link
          // If the previous input is EOF, program end
          if (std::cin.eof()) {
             quit_game();
-            exit(EXIT_SUCCESS);
          }
       }
    
@@ -928,7 +1080,6 @@ std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, Link
       currentTurnPlayer->sumUpScores(toAddScore);
    } else {
       quit_game();
-      exit(EXIT_SUCCESS);
    }
 
    return board;
@@ -967,12 +1118,16 @@ int calculate_neg_score(bool isYmove, std::vector<std::vector<Tile*>> board, int
 }
 
 // Save the gameplay
-void save_game(std::string file_name, std::vector<std::vector<Tile*>> board, LinkedList* tile_pack,Player* currentTurnPlayer, Player* player1, Player* player2) {
+void save_game(std::string file_name, std::vector<std::vector<Tile*>> board, LinkedList* tile_pack,Player* currentTurnPlayer, Player* player1, Player* player2, bool enhance_status) {
    Tile* tempTile;
    file_name += ".txt"; // Add .txt suffix to the file name
    
    std::ofstream gameSave;
    gameSave.open(file_name);
+
+   if (enhance_status) {
+      gameSave << "#myformat" << std::endl; // M3 Enhancement
+   }
 
    // Player 1 details
    gameSave << player1->getName() << std::endl;
@@ -1127,4 +1282,9 @@ void print_help() {
    std::cout << "Menu session" << std::endl;
    std::cout << "   INPUT   |  EXPLAINATION  " << std::endl;
    std::cout << std::endl;
+}
+
+void eof_program() {
+   quit_game();
+   exit(EXIT_SUCCESS);
 }

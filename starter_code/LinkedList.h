@@ -31,7 +31,7 @@ public:
    // Remove the value at the front of the Linked List
    void removeFront();
 
-   void print_hand();
+   void print_hand(bool enhance_status);
 
    // Remove all the values from the Linked List
    void clear();
