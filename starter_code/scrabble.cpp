@@ -44,7 +44,7 @@ void new_game(bool enhance_status);
 void save_game(std::string file_name, std::vector<std::vector<Tile*>> board, LinkedList* tile_pack,Player* currentTurnPlayer, Player* player1, Player* player2, bool enhance_status);
 void load_game(bool enhance_status);
 bool enhancement_status();
-void print_credits();
+void print_credits(bool enhance_status);
 void quit_game();
 bool isOnlyUpperLetter(const std::string& user_name);
 void start_gameplay(Player* player_1, Player* player_2, LinkedList* tile_pack, std::vector<std::vector<Tile*>> board, std::string currentPlayerName, bool enhance_status);
@@ -75,7 +75,7 @@ int main(void) {
       } else if (user_num == LOAD_GAME) { 
          load_game(enhance_status);
       } else if (user_num == PRINT_CREDITS) { 
-         print_credits();
+         print_credits(enhance_status);
       } else if (user_num == QUIT_GAME) { 
          quit_game();
       } else if (user_num == ENHANCE_GAME) {
@@ -552,18 +552,32 @@ void load_game(bool enhance_status) {
 }
 
 // 2.2.3 Credits (Show student information)
-void print_credits() {
-   std::cout << "----------------------------------" << std::endl;
-   std::cout << "Name: " << MEMBER_1_NAME << std::endl;
-   std::cout << "Student ID: " << MEMBER_1_ID << std::endl;
-   std::cout << "Email: " << MEMBER_1_EMAIL << std::endl;
-   std::cout << std::endl;
-   
-   std::cout << "Name: " << MEMBER_2_NAME << std::endl;
-   std::cout << "Student ID: " << MEMBER_2_ID << std::endl;
-   std::cout << "Email: " << MEMBER_2_EMAIL << std::endl;
-   std::cout << "----------------------------------" << std::endl;
-   std::cout << std::endl;
+void print_credits(bool enhance_status) {
+   if (!enhance_status) {
+      std::cout << "----------------------------------" << std::endl;
+      std::cout << "Name: " << MEMBER_1_NAME << std::endl;
+      std::cout << "Student ID: " << MEMBER_1_ID << std::endl;
+      std::cout << "Email: " << MEMBER_1_EMAIL << std::endl;
+      std::cout << std::endl;
+      
+      std::cout << "Name: " << MEMBER_2_NAME << std::endl;
+      std::cout << "Student ID: " << MEMBER_2_ID << std::endl;
+      std::cout << "Email: " << MEMBER_2_EMAIL << std::endl;
+      std::cout << "----------------------------------" << std::endl;
+      std::cout << std::endl;
+   } else {
+      std::cout << "\e[33m----------------------------------\033[0m" << std::endl;
+      std::cout << "Name: \e[36m" << MEMBER_1_NAME << "\033[0m" << std::endl;
+      std::cout << "Student ID: \e[36m" << MEMBER_1_ID << "\033[0m" << std::endl;
+      std::cout << "Email: \e[36m" << MEMBER_1_EMAIL << "\033[0m" << std::endl;
+      std::cout << std::endl;
+      
+      std::cout << "Name: \e[35m" << MEMBER_2_NAME << "\033[0m" << std::endl;
+      std::cout << "Student ID: \e[35m" << MEMBER_2_ID << "\033[0m" << std::endl;
+      std::cout << "Email: \e[35m" << MEMBER_2_EMAIL << "\033[0m" << std::endl;
+      std::cout << "\e[33m----------------------------------\033[0m" << std::endl;
+      std::cout << std::endl;
+   }
 }
 
 // 2.2.4 Quit
