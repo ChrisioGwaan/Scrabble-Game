@@ -24,7 +24,7 @@
 #define LOAD_GAME       "2"
 #define PRINT_CREDITS   "3"
 #define QUIT_GAME       "4"
-#define ENHANCE_GAME    "5"     // TOUSE
+#define ENHANCE_GAME    "5"     // Enhancement
 
 #define HAND_AMOUNT     7
 #define BOARD_SIZE      15
@@ -45,7 +45,7 @@ void save_game(std::string file_name, std::vector<std::vector<Tile*>> board, Lin
 void load_game(bool enhance_status);
 bool enhancement_status();
 void print_credits(bool enhance_status);
-void quit_game();
+void quit_game(bool enhance_status);
 bool isOnlyUpperLetter(const std::string& user_name);
 void start_gameplay(Player* player_1, Player* player_2, LinkedList* tile_pack, std::vector<std::vector<Tile*>> board, std::string currentPlayerName, bool enhance_status);
 void print_board(std::vector<std::vector<Tile*>> board, bool enhance_status);
@@ -77,14 +77,14 @@ int main(void) {
       } else if (user_num == PRINT_CREDITS) { 
          print_credits(enhance_status);
       } else if (user_num == QUIT_GAME) { 
-         quit_game();
+         quit_game(enhance_status);
       } else if (user_num == ENHANCE_GAME) {
          enhance_status = enhancement_status();
       }
    }
 
    if (user_num != QUIT_GAME) {
-      quit_game();
+      quit_game(enhance_status);
    }
 
    return EXIT_SUCCESS;
@@ -137,7 +137,7 @@ std::string menu(bool enhance_status) {
             print_help();
          } else if (user_num.compare("exit") == 0 || user_num.compare("quit") == 0) {
             // End the program
-            quit_game();
+            quit_game(enhance_status);
          } else {
             std::cout << "\e[34mThe input is not number 1, 2, 3, 4 or 5. Try again!\033[0m" << std::endl;
             std::cout << "Want help? Just type \e[33m\"help\"\033[0m in the command line." << std::endl;
@@ -185,7 +185,7 @@ void new_game(bool enhance_status) {
             print_help();
             std::cout << "\e[33m>\033[0m ";
          } else if (player_1.compare("exit") == 0 || player_1.compare("quit") == 0) {
-            quit_game();
+            quit_game(enhance_status);
          } else {
             std::cout << "Enter a name again for \e[36mplayer 1\033[0m (uppercase characters only)" << std::endl;
             std::cout << "\e[33m>\033[0m ";
@@ -196,7 +196,7 @@ void new_game(bool enhance_status) {
    }
 
    if (std::cin.eof()) {
-      quit_game();
+      quit_game(enhance_status);
    }
 
    if (!enhance_status) {
@@ -222,7 +222,7 @@ void new_game(bool enhance_status) {
             print_help();
             std::cout << "\e[33m>\033[0m ";
          } else if (player_2.compare("exit") == 0 || player_2.compare("quit") == 0) {
-            quit_game();
+            quit_game(enhance_status);
          } else {
             std::cout << "Enter a name again for \e[35mplayer 2\033[0m (uppercase characters only)" << std::endl;
             std::cout << "\e[33m>\033[0m ";
@@ -233,7 +233,7 @@ void new_game(bool enhance_status) {
    }
 
    if (std::cin.eof()) {
-      quit_game();
+      quit_game(enhance_status);
    }
 
    Player* player1 = new Player(player_1);
@@ -354,7 +354,7 @@ void load_game(bool enhance_status) {
    }
 
    if (std::cin.eof()) {
-      quit_game();
+      quit_game(enhance_status);
    }
 
    // Read file contents and store to the vector that we have created
@@ -581,8 +581,12 @@ void print_credits(bool enhance_status) {
 }
 
 // 2.2.4 Quit
-void quit_game() {
-   std::cout << "Goodbye!" << std::endl;
+void quit_game(bool enhance_status) {
+   if (!enhance_status) {
+      std::cout << "Goodbye!" << std::endl;
+   } else {
+      std::cout << "\e[46mGoodbye!\033[0m" << std::endl;
+   }
    exit(EXIT_SUCCESS);
 }
 
@@ -696,7 +700,7 @@ void start_gameplay(Player* player1, Player* player2, LinkedList* tile_pack, std
    }
    std::cout << std::endl;
    // Quit the game
-   quit_game();
+   quit_game(enhance_status);
 }
 
 // Print the game board
@@ -808,7 +812,7 @@ std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, Link
 
          if (enhance_status) {
             if (player_move_input[0].compare("quit") == 0 || player_move_input[0].compare("exit") == 0) {
-               quit_game();
+               quit_game(enhance_status);
             } else if (player_move_input[0].compare("help") == 0) {
                isValidInput = true;
                print_help();
@@ -1058,7 +1062,7 @@ std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, Link
 
          // If the previous input is EOF, program end
          if (std::cin.eof()) {
-            quit_game();
+            quit_game(enhance_status);
          }
       }
    
@@ -1093,7 +1097,7 @@ std::vector<std::vector<Tile*>> tile_move(Player* player1, Player* player2, Link
       toAddScore += board[y_vector[0]][x_vector[0]]->getValue();
       currentTurnPlayer->sumUpScores(toAddScore);
    } else {
-      quit_game();
+      quit_game(enhance_status);
    }
 
    return board;
@@ -1278,8 +1282,7 @@ bool enhancement_status() {
    }
 
    if (std::cin.eof()) {
-      quit_game();
-      exit(EXIT_SUCCESS);
+      quit_game(false);
    }
    std::cout << std::endl;
 
@@ -1292,13 +1295,48 @@ bool enhancement_status() {
 
 // TO IMPLEMENT
 void print_help() {
-   std::cout << "----------------------------" << std::endl;
-   std::cout << "Menu session" << std::endl;
-   std::cout << "   INPUT   |  EXPLAINATION  " << std::endl;
+   std::cout << "                                           \e[43mHELP!\033[0m" << std::endl;
+   std::cout << "\e[33m----------------------------------------------------------------------------------------------\033[0m" << std::endl;
+   std::cout << "\e[31mNotice:\033[0m" << std::endl;
+   std::cout << "\e[31m      1) Users are welcome to use EOF input or\033[0m" << std::endl;
+   std::cout << "\e[31m         type \e[33m\"quit\"\033[0m \e[31m or \e[33m\"exit\"\033[0m \e[31mto exit the program.\033[0m" << std::endl;
+   std::cout << "\e[31m      2) If the user do not know what they can type in the command,\033[0m" << std::endl;
+   std::cout << "\e[31m         type \e[33m\"help\"\033[0m \e[31mat any time.\033[0m" << std::endl;
+   std::cout << "\e[31m      3) If you have typed a wrong input, no worries,\033[0m" << std::endl;
+   std::cout << "\e[31m         the program will ask you to type again until you type a correct input.\033[0m" << std::endl;
    std::cout << std::endl;
-}
 
-void eof_program() {
-   quit_game();
-   exit(EXIT_SUCCESS);
+   std::cout << "1. Menu" << std::endl;
+   std::cout << "   \e[33m\"> \"\033[0m \e[32m<---\033[0m Ask user to type the number 1,2,3,4 or 5 in the command." << std::endl;
+   std::cout << "   For \e[33m1\033[0m, create a new game." << std::endl;
+   std::cout << "   For \e[33m2\033[0m, load a game by enterring the existed file name." << std::endl;
+   std::cout << "   For \e[33m3\033[0m, show the credit messages of this program." << std::endl;
+   std::cout << "   For \e[33m4\033[0m, end of the program." << std::endl;
+   std::cout << "   For \e[33m5\033[0m, configure the enhancement." << std::endl;
+   std::cout << std::endl;
+
+   std::cout << "2. New Game" << std::endl;
+   std::cout << "   Enter a name for player 1 (uppercase characters only)" << std::endl;
+   std::cout << "   \e[33m\"> \"\033[0m \e[32m<---\033[0m Ask player No.1 to type the prefered name (Must be all capital letters) in the command." << std::endl;
+   std::cout << "   Enter a name for player 2 (uppercase characters only)" << std::endl;
+   std::cout << "   \e[33m\"> \"\033[0m \e[32m<---\033[0m Ask player No.2 to type the prefered name (Must be all capital letters) in the command." << std::endl;
+   std::cout << std::endl;
+
+   std::cout << "3. Load Game" << std::endl;
+   std::cout << "   Enter the filename from which load a game" << std::endl;
+   std::cout << "   \e[33m\"> \"\033[0m \e[32m<---\033[0m Ask user to type the file name, remember to include \'.txt\'." << std::endl;
+   std::cout << std::endl;
+
+   std::cout << "4. Major Gameplay" << std::endl;
+   std::cout << "   For example, the first player's hand has" << std::endl;
+   std::cout << "   \e[33mL-1, O-1, M-3, Q-10, T-1, I-1, C-3\033[0m" << std::endl;
+   std::cout << "   \e[33m\"> \"\033[0m \e[32m<---\033[0m User can type the following commands below:" << std::endl;
+   std::cout << "             \e[34msave <file_name>\033[0m                 --- Save the gameplay at the given file name" << std::endl;
+   std::cout << "             \e[34mpass\033[0m                             --- Pass the current turn." << std::endl;
+   std::cout << "             \e[34mquit\033[0m or \e[34mexit\033[0m                     --- Exit the program." << std::endl;
+   std::cout << "             \e[34mplace <letter> at <Coordination>\033[0m --- Type the letter of the given hand. Type the coordination from the board." << std::endl;
+   std::cout << "                                                  For example, place H AT H7. To place the tile on the board." << std::endl;
+   std::cout << "             \e[34mplace Done\033[0m                       --- Finish placing and go to next turn." << std::endl;
+   std::cout << "\e[33m----------------------------------------------------------------------------------------------\033[0m" << std::endl;
+   std::cout << std::endl;
 }
